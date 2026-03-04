@@ -1,0 +1,30 @@
+services:
+
+  page-converter:
+    build:
+      context: .
+      args:
+        - USER_ID=${UID}
+        - GROUP_ID=${GID}
+    image: page-to-alto-server
+    container_name: page2alto-converter
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/var/www/html:rw
+    restart: unless-stopped
+    networks:
+      - tp_backend
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      UPLOAD_KEY: ${UPLOAD_KEY}
+      # Create Nginx vHost and SSL cert from ACME companion
+      VIRTUAL_HOST: "${VIRTUAL_HOST}"
+      LETSENCRYPT_HOST: "${LETSENCRYPT_HOST}"
+      LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
+      VIRTUAL_PORT: ${VIRTUAL_PORT}
+
+networks:
+  tp_backend:
+    name: ${DOCKER_NETWORK}
+    external: true
