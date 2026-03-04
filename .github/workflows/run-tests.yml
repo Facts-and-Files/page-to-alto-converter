@@ -1,0 +1,92 @@
+name: PAGE to ALTO test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: page-to-alto-server
+      UPLOAD_KEY: gh-actions-upload-token
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg USER_ID=1000 \
+            --build-arg GROUP_ID=1000 \
+            -t "${IMAGE_NAME}" .
+
+      - name: CLI smoke test (PAGE 2013 -> 2019 -> ALTO)
+        run: |
+          docker run --rm \
+            "${IMAGE_NAME}" \
+            bash -lc "/var/www/tests/test-page-pipeline.sh"
+
+      - name: Start PHP server container
+        run: |
+          docker run -d --rm \
+            --name page2alto_http \
+            -e ENVIRONMENT=ci \
+            -e UPLOAD_KEY="${UPLOAD_KEY}" \
+            -p 8000:8000 \
+            "${IMAGE_NAME}"
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..20}; do
+            if curl -sSf http://localhost:8000/health.txt > /dev/null; then
+              echo "Server is up"
+              exit 0
+            fi
+            echo "Waiting for server..."
+            sleep 1
+          done
+          echo "Server did not start in time"
+          exit 1
+
+      - name: HTTP POST upload test (end-to-end)
+        run: |
+          # Sample file inside the container
+          SAMPLE="/var/www/tests/page-2013-sample.xml"
+
+          # Send multipart/form-data POST to index.php
+          RESP=$(curl -sS -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${UPLOAD_KEY}" \
+            -F "file=@${SAMPLE};type=application/xml" \
+            "http://localhost:8000/index.php")
+
+          BODY=$(echo "$RESP" | sed '$d')
+          CODE=$(echo "$RESP" | tail -n1)
+
+          echo "HTTP status: $CODE"
+
+          if [ "$CODE" -ne 200 ]; then
+            echo "Non-200 response from API"
+            echo "Body: $BODY"
+            exit 1
+          fi
+
+          # Basic sanity: returned body should look like ALTO XML
+          echo "$BODY" | grep -q "http://www.loc.gov/standards/alto" || {
+            echo "Response does not look like ALTO XML"
+            echo "Body (truncated):"
+            echo "$BODY" | head -n 40
+            exit 1
+          }
+
+          echo "OK: POST upload endpoint returned ALTO XML."
+
+      - name: Stop PHP server container
+        if: always()
+        run: docker stop page2alto_http || true
