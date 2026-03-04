@@ -55,37 +55,19 @@ jobs:
           echo "Server did not start in time"
           exit 1
 
-      - name: HTTP POST upload test (end-to-end)
+      - name: HTTP POST test (PRImA v2019)
         run: |
-          # Sample file inside the container
-          SAMPLE="./tests/page-2013-sample.xml"
+          docker exec \
+            -e UPLOAD_KEY="${UPLOAD_KEY}" \
+            page2alto_http \
+            bash -lc "/var/www/tests/http-page-upload-test.sh /var/www/tests/page-2019-sample.xml"
 
-          # Send multipart/form-data POST to index.php
-          RESP=$(curl -sS -w "\n%{http_code}" \
-            -H "Authorization: Bearer ${UPLOAD_KEY}" \
-            -F "file=@${SAMPLE};type=application/xml" \
-            "http://localhost:8000/index.php")
-
-          BODY=$(echo "$RESP" | sed '$d')
-          CODE=$(echo "$RESP" | tail -n1)
-
-          echo "HTTP status: $CODE"
-
-          if [ "$CODE" -ne 200 ]; then
-            echo "Non-200 response from API"
-            echo "Body: $BODY"
-            exit 1
-          fi
-
-          # Basic sanity: returned body should look like ALTO XML
-          echo "$BODY" | grep -q "http://www.loc.gov/standards/alto" || {
-            echo "Response does not look like ALTO XML"
-            echo "Body (truncated):"
-            echo "$BODY" | head -n 40
-            exit 1
-          }
-
-          echo "OK: POST upload endpoint returned ALTO XML."
+      - name: HTTP POST test (Transkribus)
+        run: |
+          docker exec \
+            -e UPLOAD_KEY="${UPLOAD_KEY}" \
+            page2alto_http \
+            bash -lc "/var/www/tests/http-page-upload-test.sh /var/www/tests/transkribus-page-2013-sample.xml"
 
       - name: Stop PHP server container
         if: always()
