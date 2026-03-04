@@ -52,13 +52,58 @@ class PageToAltoConverter
 
     private function buildCommand(string $input, string $normalized, string $output): string
     {
+        if ($this->isTranskribusPageXml($input)) {
+            return sprintf(
+                'transkribus-to-prima %s > %s && page-to-alto --alto-version 4.2 --no-check-words %s -O %s 2>&1',
+                escapeshellarg($input),
+                escapeshellarg($normalized),
+                escapeshellarg($normalized),
+                escapeshellarg($output)
+            );
+        }
+
         return sprintf(
-            'transkribus-to-prima %s > %s && page-to-alto --alto-version 4.2 --no-check-words %s -O %s 2>&1',
+            'page-to-alto --alto-version 4.2 --no-check-words %s -O %s 2>&1',
             escapeshellarg($input),
-            escapeshellarg($normalized),
-            escapeshellarg($normalized),
             escapeshellarg($output)
         );
+    }
+
+    private function isTranskribusPageXml(string $filePath): bool
+    {
+        if (!is_file($filePath)) {
+            return false;
+        }
+
+        $xml = @simplexml_load_file($filePath);
+        if ($xml === false) {
+            return false;
+        }
+
+        $xml->registerXPathNamespace('pc13', 'http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15');
+        $xml->registerXPathNamespace('pc17', 'http://schema.primaresearch.org/PAGE/gts/pagecontent/2017-07-15');
+        $xml->registerXPathNamespace('pc19', 'http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15');
+
+        $paths = [
+            '//pc13:Metadata/pc13:Creator',
+            '//pc17:Metadata/pc17:Creator',
+            '//pc19:Metadata/pc19:Creator',
+        ];
+
+        foreach ($paths as $path) {
+            $nodes = $xml->xpath($path);
+            if (!$nodes) {
+                continue;
+            }
+            foreach ($nodes as $node) {
+                $creator = trim((string)$node);
+                if ($creator === 'Transkribus Processing API') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function generateTempFile(string $prefix): string
