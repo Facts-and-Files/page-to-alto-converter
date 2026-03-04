@@ -1,0 +1,23 @@
+/node_modules
+/src/public/hot
+/src/public/storage
+/src/storage/*.key
+/src/storage/text-files
+/src/vendor
+/local-data
+.env*
+!.env.example
+!.env.testing
+/src/.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+*.sql
+*.sql.gz
+
+# app specific
+config
