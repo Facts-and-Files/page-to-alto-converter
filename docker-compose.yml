@@ -23,6 +23,12 @@ services:
       LETSENCRYPT_HOST: "${LETSENCRYPT_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
       VIRTUAL_PORT: ${VIRTUAL_PORT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health.txt"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
   tp_backend:
