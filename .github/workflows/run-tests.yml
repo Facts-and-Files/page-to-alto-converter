@@ -58,7 +58,7 @@ jobs:
       - name: HTTP POST upload test (end-to-end)
         run: |
           # Sample file inside the container
-          SAMPLE="/var/www/tests/page-2013-sample.xml"
+          SAMPLE="./tests/page-2013-sample.xml"
 
           # Send multipart/form-data POST to index.php
           RESP=$(curl -sS -w "\n%{http_code}" \
