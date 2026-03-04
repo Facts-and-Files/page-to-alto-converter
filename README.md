@@ -4,9 +4,13 @@
  
 </div>
 
-# PAGE XML to ALTO XML converter
+# Transkribus PAGE XML to ALTO XML converter
 
-Docker image that exposes an endpoint for converting PAGE XML (v2013 and v2019) to ALTO XML.
+Docker image that exposes an endpoint for converting PAGE XML (Transkribus flavor and PRImA v2019) to ALTO XML.
+It basically bundles the already available Python scripts:
+
+* https://github.com/OCR-D/page-to-alto
+* https://github.com/kba/transkribus-to-prima
 
 ## Building for development/local docker
 
