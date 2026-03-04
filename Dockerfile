@@ -8,6 +8,7 @@ RUN apt-get update \
     git \
     php-cli \
     php-xml \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # wee need a older version of the setup tools which still provide pkg_resource
@@ -28,6 +29,7 @@ COPY --chown=appuser:appuser ./src/ /var/www/html/
 # copy test data
 COPY --chown=appuser:appuser ./tests/ /var/www/tests/
 RUN chmod +x /var/www/tests/test-page-to-alto.sh
+RUN chmod +x /var/www/tests/http-page-upload-test.sh
 
 COPY ./config/php.ini /etc/php/8.4/cli/conf.d/99-custom-limits.ini
 
