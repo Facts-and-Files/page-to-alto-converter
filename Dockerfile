@@ -7,6 +7,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     git \
     php-cli \
+    php-xml \
     && rm -rf /var/lib/apt/lists/*
 
 # wee need a older version of the setup tools which still provide pkg_resource
