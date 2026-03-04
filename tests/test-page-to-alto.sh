@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INPUT="${SCRIPT_DIR}/page-2013-sample.xml"
+INPUT="${SCRIPT_DIR}/transkribus-page-2013-sample.xml"
 TMP_DIR="$(mktemp -d)"
 NORM="${TMP_DIR}/page-2019.xml"
 ALTO="${TMP_DIR}/page.alto.xml"

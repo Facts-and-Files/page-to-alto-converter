@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15
+       http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15/pagecontent.xsd">
+  <Metadata>
+    <Creator>Generic PAGE Exporter</Creator>
+    <Created>2025-01-01T00:00:00</Created>
+  </Metadata>
+  <Page imageWidth="1000" imageHeight="1000" imageFilename="generic-test.tif">
+    <TextRegion id="r1">
+      <Coords points="0,0 100,0 100,100 0,100"/>
+      <TextLine id="l1">
+        <Coords points="0,0 100,0 100,20 0,20"/>
+        <TextEquiv>
+          <Unicode>Hello generic PAGE</Unicode>
+        </TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>

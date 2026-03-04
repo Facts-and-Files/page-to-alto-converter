@@ -22,32 +22,22 @@ stop:
 	@echo "...mischief managed."
 	@echo
 
-test: smoke-test endpoint-test
+test: smoke-test transkribus-test page-2019-test
 
 smoke-test: serve
+	@echo
 	@docker exec -it "${IMAGE_NAME}" bash -lc "/var/www/tests/test-page-to-alto.sh"
 	@echo
 
-endpoint-test: serve
-	@SAMPLE="${PWD}/tests/page-2013-sample.xml"; \
-	RESP=$$(curl -sS -w "\n%{http_code}" \
-		-H "Authorization: Bearer $(UPLOAD_KEY)" \
-		-F "file=@$$SAMPLE;type=application/xml" \
-		"http://localhost:8000/index.php"); \
-	BODY=$$(echo "$$RESP" | sed '$$d'); \
-	CODE=$$(echo "$$RESP" | tail -n1); \
-	echo "HTTP status: $$CODE"; \
-	if [ "$$CODE" -ne 200 ]; then \
-		echo "Non-200 response from API"; \
-		echo "$$BODY"; \
-		exit 1; \
-	fi; \
-	echo "$$BODY" | grep -q "http://www.loc.gov/standards/alto" || { \
-		echo "Response does not look like ALTO XML"; \
-		echo "$$BODY" | head -n 40; \
-		exit 1; \
-	}; \
-	echo "OK: HTTP POST endpoint returned ALTO XML."
+transkribus-test: serve
+	@echo
+	@bash -lc "${PWD}/tests/http-page-upload-test.sh ${PWD}/tests/transkribus-page-2013-sample.xml"
+	@echo
+
+page-2019-test: serve
+	@echo
+	@bash -lc "${PWD}/tests/http-page-upload-test.sh ${PWD}/tests/page-2019-sample.xml"
+	@echo
 
 help:
 	@echo "Manage project"
@@ -66,8 +56,11 @@ help:
 	@echo "  $$ make test"
 	@echo "  Run tests"
 	@echo ""
-	@echo "  $$ make endpoint-test"
-	@echo "  Run HTTP endpoint test"
+	@echo "  $$ make transkribus-test"
+	@echo "  Run HTTP endpoint test on Transkribus flavor PAGE XML"
+	@echo ""
+	@echo "  $$ make page-2019-test"
+	@echo "  Run HTTP endpoint test on PRImA PAGE XML v2019"
 	@echo ""
 	@echo "  $$ make smoke-test"
 	@echo "  Run python smoke test"
