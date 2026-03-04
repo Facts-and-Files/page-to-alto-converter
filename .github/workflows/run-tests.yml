@@ -31,7 +31,7 @@ jobs:
         run: |
           docker run --rm \
             "${IMAGE_NAME}" \
-            bash -lc "/var/www/tests/test-page-pipeline.sh"
+            bash -lc "/var/www/tests/test-page-to-alto.sh"
 
       - name: Start PHP server container
         run: |
