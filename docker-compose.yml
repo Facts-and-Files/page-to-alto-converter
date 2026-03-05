@@ -11,7 +11,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./src:/var/www/html:rw
+      - ./src:${CONTAINER_TARGET:-/tmp/unused}:ro
     restart: unless-stopped
     networks:
       - tp_backend
