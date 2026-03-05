@@ -39,7 +39,7 @@ jobs:
             mkdir -p "$TARGET_DIR"
 
       - name: Upload compose files
-        uses: appleboy/scp-action@v2
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.LIVE_SSH_HOST }}
           username: ${{ secrets.LIVE_SSH_USER }}
