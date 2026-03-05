@@ -1,0 +1,78 @@
+name: Build image and deploy to LIVE
+run-name: ${{ github.actor }} is building the image and deploying to LIVE...
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/page-to-alto-converter
+      TAG: ${{ github.event.release.tag_name }}
+      TARGET_DIR: page-to-alto-converter
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the Image
+        run: |
+          docker compose build
+
+      - name: Push Docker Image to DockerHub
+        run: |
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" \
+            | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker push "$IMAGE:$TAG"
+
+      - name: Ensure target directory exists
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIVE_SSH_HOST }}
+          username: ${{ secrets.LIVE_SSH_USER }}
+          key: ${{ secrets.LIVE_SSH_KEY }}
+          port: ${{ secrets.LIVE_SSH_PORT }}
+          script: |
+            TARGET_DIR="$HOME/${{ env.TARGET_DIR }}"
+            mkdir -p "$TARGET_DIR"
+
+      - name: Upload compose files
+        uses: appleboy/scp-action@v2
+        with:
+          host: ${{ secrets.LIVE_SSH_HOST }}
+          username: ${{ secrets.LIVE_SSH_USER }}
+          key: ${{ secrets.LIVE_SSH_KEY }}
+          port: ${{ secrets.LIVE_SSH_PORT }}
+          source: "docker-compose.yml"
+          target: "$HOME/${{ env.TARGET_DIR }}"
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIVE_SSH_HOST }}
+          username: ${{ secrets.LIVE_SSH_USER }}
+          key: ${{ secrets.LIVE_SSH_KEY }}
+          port: ${{ secrets.LIVE_SSH_PORT }}
+          script: |
+            set -e
+
+            TARGET_DIR="$HOME/${{ env.TARGET_DIR }}"
+
+            echo "Pulling the image..."
+            echo "${{ secrets.DOCKERHUB_PASSWORD }}" \
+              | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            docker pull "${{ env.IMAGE }}:${{ env.TAG }}"
+
+            echo "Populating .env file for Docker Compose and App..."
+            echo "${{ secrets.LIVE_ENV }}" > "$TARGET_DIR"/.env
+            echo "IMAGE=${{ env.IMAGE }}" >> "$TARGET_DIR"/.env
+            echo "TAG=${{ env.TAG }}" >> "$TARGET_DIR"/.env
+
+            echo "Restart the container"
+            cd "$TARGET_DIR"
+            docker compose up -d
+
+            echo "Deployment complete."
