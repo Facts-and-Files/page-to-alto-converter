@@ -5,6 +5,7 @@ ARG GROUP_ID
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    build-essential \
     git \
     php-cli \
     php-xml \
